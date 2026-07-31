@@ -1,0 +1,117 @@
+[
+  {
+    "id": "q01",
+    "question": "Where is ABC Company Parking located?",
+    "expected_source": "location_and_hours.md",
+    "expected_facts": ["123 Central Avenue, Bishkek"]
+  },
+  {
+    "id": "q02",
+    "question": "What time does the parking open?",
+    "expected_source": "location_and_hours.md",
+    "expected_facts": ["06:00"]
+  },
+  {
+    "id": "q03",
+    "question": "How late can I keep my car in the parking?",
+    "expected_source": "location_and_hours.md",
+    "expected_facts": ["23:00"]
+  },
+  {
+    "id": "q04",
+    "question": "Can I pay with cash or a card?",
+    "expected_source": "general_information.md",
+    "expected_facts": ["card", "cash", "at the entrance", "after approval"]
+  },
+  {
+    "id": "q05",
+    "question": "What parking types can I choose from?",
+    "expected_source": "parking_types_and_prices.md",
+    "expected_facts": ["Standard", "Covered", "EV charging"]
+  },
+  {
+    "id": "q06",
+    "question": "How much does a standard space cost per hour?",
+    "expected_source": "parking_types_and_prices.md",
+    "expected_facts": ["50 KGS per hour"]
+  },
+  {
+    "id": "q07",
+    "question": "How many covered parking spaces are there?",
+    "expected_source": "parking_types_and_prices.md",
+    "expected_facts": ["20"]
+  },
+  {
+    "id": "q08",
+    "question": "How early can I make a booking?",
+    "expected_source": "reservation_rules.md",
+    "expected_facts": ["up to 5 days in advance"]
+  },
+  {
+    "id": "q09",
+    "question": "What is the shortest reservation I can make?",
+    "expected_source": "reservation_rules.md",
+    "expected_facts": ["1 hour"]
+  },
+  {
+    "id": "q10",
+    "question": "What is the maximum reservation duration?",
+    "expected_source": "reservation_rules.md",
+    "expected_facts": ["15 hours"]
+  },
+  {
+    "id": "q11",
+    "question": "What information do I need to provide for a reservation?",
+    "expected_source": "reservation_rules.md",
+    "expected_facts": [
+      "first name",
+      "surname",
+      "car number",
+      "parking type",
+      "start date and time",
+      "end date and time"
+    ]
+  },
+  {
+    "id": "q12",
+    "question": "Is my reservation approved as soon as I submit it?",
+    "expected_source": "general_information.md",
+    "expected_facts": ["pending", "administrator approval"]
+  },
+  {
+    "id": "q13",
+    "question": "Can I cancel before my booking begins?",
+    "expected_source": "reservation_rules.md",
+    "expected_facts": ["before its start time"]
+  },
+  {
+    "id": "q14",
+    "question": "What happens when a driver is over 15 minutes late?",
+    "expected_source": "reservation_rules.md",
+    "expected_facts": ["reserved space is released"]
+  },
+  {
+    "id": "q15",
+    "question": "Will a fully booked request be sent to the administrator?",
+    "expected_source": "reservation_rules.md",
+    "expected_facts": ["must not be sent"]
+  },
+  {
+    "id": "q16",
+    "question": "Can I reserve a space with EV charging?",
+    "expected_source": "faq.md",
+    "expected_facts": ["EV charging is available", "10 spaces"]
+  },
+  {
+    "id": "q17",
+    "question": "Does the parking offer monthly subscriptions?",
+    "expected_source": null,
+    "expected_facts": []
+  },
+  {
+    "id": "q18",
+    "question": "What is the maximum vehicle height for covered parking?",
+    "expected_source": null,
+    "expected_facts": []
+  }
+]
