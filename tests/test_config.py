@@ -16,6 +16,7 @@ def test_settings_load_with_safe_defaults(
     assert settings.app_name == "Parking Reservation Chatbot"
     assert settings.environment == "development"
     assert settings.database_path == Path("data/dynamic/parking.db")
+    assert settings.admin_approval_base_url == "http://127.0.0.1:8000"
     assert settings.openai_api_key is None
 
 
@@ -26,12 +27,14 @@ def test_environment_variables_override_defaults(
     monkeypatch.setenv("ENVIRONMENT", "test")
     monkeypatch.setenv("LOG_LEVEL", "DEBUG")
     monkeypatch.setenv("DATABASE_PATH", "data/dynamic/test.db")
+    monkeypatch.setenv("ADMIN_APPROVAL_BASE_URL", "http://admin.test:9000")
 
     settings = Settings()
 
     assert settings.environment == "test"
     assert settings.log_level == "DEBUG"
     assert settings.database_path == Path("data/dynamic/test.db")
+    assert settings.admin_approval_base_url == "http://admin.test:9000"
 
 
 def test_sensitive_fields_are_hidden(

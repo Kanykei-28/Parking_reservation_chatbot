@@ -12,6 +12,11 @@ from parking_chatbot.chatbot import Intent, detect_intent
         ("Can I book a covered spot?", Intent.RESERVATION),
         ("I need a reservation", Intent.RESERVATION),
         ("Book parking for tomorrow", Intent.RESERVATION),
+        ("What is the status of my reservation?", Intent.APPROVAL_STATUS),
+        ("Check my reservation status", Intent.APPROVAL_STATUS),
+        ("Has my reservation been approved?", Intent.APPROVAL_STATUS),
+        ("Was my reservation rejected?", Intent.APPROVAL_STATUS),
+        ("Is my booking still pending?", Intent.APPROVAL_STATUS),
         ("What are the parking hours?", Intent.INFORMATION),
         ("How much does covered parking cost?", Intent.INFORMATION),
         ("Where is the parking located?", Intent.INFORMATION),
@@ -91,4 +96,15 @@ def test_applies_intent_priority(message: str, expected: Intent) -> None:
     ],
 )
 def test_unrelated_messages_are_unknown(message: str) -> None:
+    assert detect_intent(message) is Intent.UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "What is the system status?",
+        "What is your employment status?",
+    ],
+)
+def test_unrelated_status_phrases_do_not_match_approval_status(message: str) -> None:
     assert detect_intent(message) is Intent.UNKNOWN

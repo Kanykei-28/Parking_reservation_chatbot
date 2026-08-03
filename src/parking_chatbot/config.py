@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     llm_provider: str = "not-configured"
     llm_model: str = "not-configured"
     embedding_model: str = "not-configured"
+    admin_approval_base_url: str = "http://127.0.0.1:8000"
     openai_api_key: SecretStr | None = Field(default=None, repr=False)
 
 

@@ -14,10 +14,10 @@ def run_cli(
     if responses is not None:
         chatbot.chat.side_effect = responses
     chatbot_class = MagicMock(return_value=chatbot)
-    monkeypatch.setattr(cli, "ParkingChatbot", chatbot_class)
+    monkeypatch.setattr(cli, "create_stage1_chatbot", chatbot_class)
     monkeypatch.setattr("builtins.input", MagicMock(side_effect=inputs))
 
-    cli.main()
+    cli.main([])
 
     return chatbot_class, chatbot
 
@@ -91,3 +91,20 @@ def test_one_chatbot_instance_is_reused_for_session(
 
     chatbot_class.assert_called_once_with()
     assert chatbot.chat.call_args_list == [call("first"), call("second")]
+
+
+def test_stage2_mode_uses_application_factory_and_closes_resources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    chatbot = MagicMock()
+    application = MagicMock()
+    application.chatbot = chatbot
+    application_factory = MagicMock(return_value=application)
+    monkeypatch.setattr(cli, "create_stage2_application", application_factory)
+    monkeypatch.setattr("builtins.input", MagicMock(side_effect=["exit"]))
+
+    cli.main(["--with-admin-approval"])
+
+    application_factory.assert_called_once_with()
+    application.close.assert_called_once_with()
+    chatbot.chat.assert_not_called()
