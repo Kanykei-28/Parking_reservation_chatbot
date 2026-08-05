@@ -46,3 +46,7 @@ chroma/
 # Generated application files
 data/dynamic/reservations.txt
 configs/openai.json
+
+# Runtime-generated confirmed reservation storage
+data/dynamic/confirmed_reservations.txt
+data/dynamic/confirmed_reservations.txt.index.json

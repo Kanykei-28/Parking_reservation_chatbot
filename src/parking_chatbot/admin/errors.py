@@ -1,0 +1,2 @@
+class ConfirmedReservationProcessingError(RuntimeError):
+    pass

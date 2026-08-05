@@ -15,6 +15,7 @@ dependencies = [
     "pydantic-settings>=2.2,<3",
     "python-dotenv>=1.0,<2",
     "setuptools>=69,<81",
+    "mcp>=1.27,<2",
 
     "langchain>=1,<2",
     "langchain-core>=1,<2",

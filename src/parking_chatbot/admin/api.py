@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
@@ -5,16 +6,20 @@ from uuid import UUID
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict
 
+from parking_chatbot.admin.errors import ConfirmedReservationProcessingError
 from parking_chatbot.admin.models import (
     ApprovalAlreadyDecidedError,
     ApprovalRequest,
     ApprovalStatus,
 )
+from parking_chatbot.admin.processing import ApprovedReservationProcessor
 from parking_chatbot.admin.repository import (
     ApprovalRequestNotFoundError,
     InMemoryApprovalRequestRepository,
 )
 from parking_chatbot.chatbot.reservation import Reservation
+
+logger = logging.getLogger(__name__)
 
 
 class ReservationSubmissionRequest(BaseModel):
@@ -54,6 +59,7 @@ class ApprovalDecisionRequest(BaseModel):
 
 def create_admin_app(
     repository: InMemoryApprovalRequestRepository | None = None,
+    approved_reservation_processor: ApprovedReservationProcessor | None = None,
 ) -> FastAPI:
     app = FastAPI(title="Parking Reservation Administration API")
     app_repository = repository or InMemoryApprovalRequestRepository()
@@ -112,11 +118,17 @@ def create_admin_app(
     ) -> ApprovalRequest:
         comment = decision.administrator_comment if decision is not None else None
         try:
-            return repository.approve(request_id, comment)
+            approved_request = repository.approve(request_id, comment)
         except ApprovalRequestNotFoundError as error:
             raise _not_found(request_id) from error
         except ApprovalAlreadyDecidedError as error:
             raise _already_decided(error) from error
+        if approved_reservation_processor is not None:
+            try:
+                approved_reservation_processor.process(approved_request)
+            except ConfirmedReservationProcessingError:
+                logger.error("Approved reservation processing failed")
+        return approved_request
 
     @app.post(
         "/approval-requests/{request_id}/reject",

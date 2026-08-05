@@ -108,3 +108,52 @@ def test_stage2_mode_uses_application_factory_and_closes_resources(
     application_factory.assert_called_once_with()
     application.close.assert_called_once_with()
     chatbot.chat.assert_not_called()
+
+
+def test_stage3_mode_uses_application_factory_and_closes_resources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    chatbot = MagicMock()
+    application = MagicMock()
+    application.chatbot = chatbot
+    application_factory = MagicMock(return_value=application)
+    monkeypatch.setattr(cli, "create_stage3_application", application_factory)
+    monkeypatch.setattr("builtins.input", MagicMock(side_effect=[EOFError()]))
+
+    cli.main(["--with-confirmed-processing"])
+
+    application_factory.assert_called_once_with()
+    application.close.assert_called_once_with()
+    chatbot.chat.assert_not_called()
+
+
+def test_stage_flags_are_mutually_exclusive() -> None:
+    with pytest.raises(SystemExit) as caught:
+        cli.main(["--with-admin-approval", "--with-confirmed-processing"])
+
+    assert caught.value.code == 2
+
+
+@pytest.mark.parametrize(
+    ("flag", "factory_name"),
+    [
+        ("--with-admin-approval", "create_stage2_application"),
+        ("--with-confirmed-processing", "create_stage3_application"),
+    ],
+)
+@pytest.mark.parametrize("terminal_input", ["exit", EOFError(), KeyboardInterrupt()])
+def test_application_modes_close_for_every_terminal_exit(
+    flag: str,
+    factory_name: str,
+    terminal_input: str | BaseException,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = MagicMock()
+    application.chatbot = MagicMock()
+    application_factory = MagicMock(return_value=application)
+    monkeypatch.setattr(cli, factory_name, application_factory)
+    monkeypatch.setattr("builtins.input", MagicMock(side_effect=[terminal_input]))
+
+    cli.main([flag])
+
+    application.close.assert_called_once_with()

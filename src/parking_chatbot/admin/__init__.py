@@ -20,6 +20,7 @@ from parking_chatbot.admin.models import (
     ApprovalRequest,
     ApprovalStatus,
 )
+from parking_chatbot.admin.processing import ApprovedReservationProcessor
 from parking_chatbot.admin.repository import (
     ApprovalRequestNotFoundError,
     InMemoryApprovalRequestRepository,
@@ -30,6 +31,7 @@ __all__ = [
     "ApprovalRequest",
     "ApprovalRequestNotFoundError",
     "ApprovalStatus",
+    "ApprovedReservationProcessor",
     "ApprovalGateway",
     "ApprovalGatewayError",
     "AdministratorApprovalClient",

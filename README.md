@@ -13,4 +13,5 @@ The detailed metholodgy of each stage is given under `/docs` folder.
 
 - [Stage 1: Creation of a RAG System and Chatbot](docs/stage-1.md)
 - [Stage 2: Human-in-the-Loop Administrator Approval](docs/stage-2.md)
+- [Stage 2: Processing confirmed reservation by using MCP server](docs/stage-3.md)
 

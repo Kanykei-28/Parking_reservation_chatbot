@@ -1,6 +1,7 @@
 from typing import cast
 from unittest.mock import MagicMock
 
+import pytest
 from langchain_core.language_models import BaseChatModel
 
 from parking_chatbot.admin.client import AdministratorApprovalClient
@@ -8,9 +9,11 @@ from parking_chatbot.admin.gateway import ApprovalGateway
 from parking_chatbot.application import (
     create_stage1_chatbot,
     create_stage2_application,
+    create_stage3_application,
 )
 from parking_chatbot.chatbot import ParkingChatbot
 from parking_chatbot.config import Settings
+from parking_chatbot.mcp_client import ConfirmedReservationMCPClient
 
 
 def test_stage2_factory_builds_chatbot_with_approval_integration() -> None:
@@ -21,7 +24,6 @@ def test_stage2_factory_builds_chatbot_with_approval_integration() -> None:
     model_factory = MagicMock(return_value=model)
     approval_gateway = MagicMock(spec=ApprovalGateway)
     gateway_factory = MagicMock(return_value=approval_gateway)
-
     application = create_stage2_application(
         settings,
         client_factory=client_factory,
@@ -33,9 +35,29 @@ def test_stage2_factory_builds_chatbot_with_approval_integration() -> None:
     assert application.client is client
     assert application.gateway is approval_gateway
     assert application.integration is not None
+    assert not hasattr(application, "confirmed_reservation_client")
     client_factory.assert_called_once_with("http://admin.test:8765")
     model_factory.assert_called_once_with()
     gateway_factory.assert_called_once_with(model, client)
+
+
+def test_stage3_factory_builds_and_injects_mcp_client() -> None:
+    admin_client = MagicMock(spec=AdministratorApprovalClient)
+    approval_gateway = MagicMock(spec=ApprovalGateway)
+    mcp_client = MagicMock(spec=ConfirmedReservationMCPClient)
+    mcp_client_factory = MagicMock(return_value=mcp_client)
+
+    application = create_stage3_application(
+        Settings(),
+        client_factory=MagicMock(return_value=admin_client),
+        model_factory=MagicMock(return_value=cast(BaseChatModel, MagicMock())),
+        gateway_factory=MagicMock(return_value=approval_gateway),
+        confirmed_reservation_client_factory=mcp_client_factory,
+    )
+
+    assert application.confirmed_reservation_client is mcp_client
+    assert application.integration is not None
+    mcp_client_factory.assert_called_once_with()
 
 
 def test_stage2_application_closes_administrator_client() -> None:
@@ -50,6 +72,52 @@ def test_stage2_application_closes_administrator_client() -> None:
     application.close()
 
     client.close.assert_called_once_with()
+
+
+def test_stage3_application_closes_both_clients() -> None:
+    admin_client = MagicMock(spec=AdministratorApprovalClient)
+    mcp_client = MagicMock(spec=ConfirmedReservationMCPClient)
+    application = create_stage3_application(
+        Settings(),
+        client_factory=MagicMock(return_value=admin_client),
+        model_factory=MagicMock(return_value=cast(BaseChatModel, MagicMock())),
+        gateway_factory=MagicMock(return_value=MagicMock(spec=ApprovalGateway)),
+        confirmed_reservation_client_factory=MagicMock(return_value=mcp_client),
+    )
+
+    application.close()
+
+    mcp_client.close.assert_called_once_with()
+    admin_client.close.assert_called_once_with()
+
+
+def test_stage3_construction_failure_closes_both_clients() -> None:
+    admin_client = MagicMock(spec=AdministratorApprovalClient)
+    mcp_client = MagicMock(spec=ConfirmedReservationMCPClient)
+
+    with pytest.raises(RuntimeError, match="model failed"):
+        create_stage3_application(
+            Settings(),
+            client_factory=MagicMock(return_value=admin_client),
+            model_factory=MagicMock(side_effect=RuntimeError("model failed")),
+            confirmed_reservation_client_factory=MagicMock(return_value=mcp_client),
+        )
+
+    mcp_client.close.assert_called_once_with()
+    admin_client.close.assert_called_once_with()
+
+
+def test_stage2_construction_failure_closes_administrator_client() -> None:
+    admin_client = MagicMock(spec=AdministratorApprovalClient)
+
+    with pytest.raises(RuntimeError, match="model failed"):
+        create_stage2_application(
+            Settings(),
+            client_factory=MagicMock(return_value=admin_client),
+            model_factory=MagicMock(side_effect=RuntimeError("model failed")),
+        )
+
+    admin_client.close.assert_called_once_with()
 
 
 def test_stage1_factory_builds_chatbot_without_stage2_dependencies() -> None:

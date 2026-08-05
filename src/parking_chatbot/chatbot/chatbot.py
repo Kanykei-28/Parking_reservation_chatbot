@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from parking_chatbot.admin.errors import ConfirmedReservationProcessingError
 from parking_chatbot.chatbot.guardrails import GuardrailViolation, check_message
 from parking_chatbot.chatbot.intents import Intent, detect_intent
 from parking_chatbot.chatbot.reservation import Reservation
@@ -52,6 +53,18 @@ class ParkingChatbot:
             return "There is no submitted reservation to check."
         try:
             approval = integration.refresh()
+        except ConfirmedReservationProcessingError:
+            message = (
+                "Your reservation has been approved, but it could not be saved to "
+                "confirmed reservation storage. Please try checking again later."
+            )
+            if integration.request_id is not None:
+                message += f" Request ID: {integration.request_id}."
+            if integration.administrator_comment:
+                message += (
+                    f" Administrator comment: {integration.administrator_comment}"
+                )
+            return message
         except RuntimeError:
             return (
                 "The administrator approval service is currently unavailable. "
