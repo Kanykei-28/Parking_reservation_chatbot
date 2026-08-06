@@ -16,7 +16,9 @@ OrchestrationGraph = CompiledStateGraph[
     OrchestrationState,
     None,
     OrchestrationState,
-    OrchestrationState,]
+    OrchestrationState,
+]
+
 
 def route_at_entry(
     state: OrchestrationState,
