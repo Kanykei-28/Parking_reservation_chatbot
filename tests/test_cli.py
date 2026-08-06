@@ -157,3 +157,126 @@ def test_application_modes_close_for_every_terminal_exit(
     cli.main([flag])
 
     application.close.assert_called_once_with()
+
+
+def test_stage4_mode_routes_messages_with_one_stable_thread_id(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    application = MagicMock()
+    application.approval_poll_interval_seconds = 2.0
+    application.orchestration.start_or_continue.side_effect = [
+        {"response": "First"},
+        {"response": "Second"},
+    ]
+    application_factory = MagicMock(return_value=application)
+    monitor = MagicMock()
+    monitor_factory = MagicMock(return_value=monitor)
+    monkeypatch.setattr(cli, "create_stage4_application", application_factory)
+    monkeypatch.setattr(cli, "ApprovalMonitor", monitor_factory)
+    monkeypatch.setattr(cli, "uuid4", MagicMock(return_value="stable-thread"))
+    monkeypatch.setattr(
+        "builtins.input", MagicMock(side_effect=["first", "second", "exit"])
+    )
+
+    cli.main(["--with-langgraph"])
+
+    assert application.orchestration.start_or_continue.call_args_list == [
+        call("stable-thread", "first"),
+        call("stable-thread", "second"),
+    ]
+    assert "Bot: First" in capsys.readouterr().out
+    monitor.close.assert_called_once_with()
+    application.close.assert_called_once_with()
+
+
+def test_stage4_pending_result_starts_monitor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = MagicMock()
+    application.approval_poll_interval_seconds = 2.0
+    application.orchestration.start_or_continue.return_value = {
+        "response": "pending",
+        "approval_status": "pending",
+    }
+    monitor = MagicMock()
+    monkeypatch.setattr(
+        cli, "create_stage4_application", MagicMock(return_value=application)
+    )
+    monkeypatch.setattr(cli, "ApprovalMonitor", MagicMock(return_value=monitor))
+    monkeypatch.setattr(cli, "uuid4", MagicMock(return_value="thread-1"))
+    monkeypatch.setattr("builtins.input", MagicMock(side_effect=["reserve", "exit"]))
+
+    cli.main(["--with-langgraph"])
+
+    monitor.start.assert_called_once_with("thread-1")
+
+
+def test_stage4_background_notification_starts_on_clean_line(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    application = MagicMock()
+    application.approval_poll_interval_seconds = 2.0
+    monitor_factory = MagicMock()
+
+    def create_monitor(
+        orchestration: object,
+        output: object,
+        *,
+        interval_seconds: float,
+    ) -> MagicMock:
+        assert callable(output)
+        output("Your reservation has been approved and recorded. Request ID: abc.")
+        return MagicMock()
+
+    monitor_factory.side_effect = create_monitor
+    monkeypatch.setattr(
+        cli,
+        "create_stage4_application",
+        MagicMock(return_value=application),
+    )
+    monkeypatch.setattr(cli, "ApprovalMonitor", monitor_factory)
+    monkeypatch.setattr("builtins.input", MagicMock(side_effect=["exit"]))
+
+    cli.main(["--with-langgraph"])
+
+    output = capsys.readouterr().out
+    assert (
+        "\nBot: Your reservation has been approved and recorded. Request ID: abc."
+        in output
+    )
+
+
+@pytest.mark.parametrize("terminal_input", ["exit", EOFError(), KeyboardInterrupt()])
+def test_stage4_closes_monitor_and_clients_on_every_exit(
+    terminal_input: str | BaseException,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = MagicMock()
+    application.approval_poll_interval_seconds = 2.0
+    monitor = MagicMock()
+    monkeypatch.setattr(
+        cli, "create_stage4_application", MagicMock(return_value=application)
+    )
+    monkeypatch.setattr(cli, "ApprovalMonitor", MagicMock(return_value=monitor))
+    monkeypatch.setattr("builtins.input", MagicMock(side_effect=[terminal_input]))
+
+    cli.main(["--with-langgraph"])
+
+    monitor.close.assert_called_once_with()
+    application.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    "flags",
+    [
+        ["--with-langgraph", "--with-admin-approval"],
+        ["--with-langgraph", "--with-confirmed-processing"],
+    ],
+)
+def test_stage4_flag_is_mutually_exclusive(flags: list[str]) -> None:
+    with pytest.raises(SystemExit) as caught:
+        cli.main(flags)
+
+    assert caught.value.code == 2

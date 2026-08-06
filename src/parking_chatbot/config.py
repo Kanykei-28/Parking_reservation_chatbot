@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     llm_model: str = "not-configured"
     embedding_model: str = "not-configured"
     admin_approval_base_url: str = "http://127.0.0.1:8000"
+    approval_poll_interval_seconds: float = Field(default=2.0, gt=0)
     openai_api_key: SecretStr | None = Field(default=None, repr=False)
 
 

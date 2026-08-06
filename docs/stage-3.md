@@ -76,7 +76,7 @@ Stage 3 requires the administrator API and chatbot to run separately.
 
 1. Start the Stage 3 administrator server in the first terminal: 
 ``` bash
-python -m parking_chatbot.cli --with-confirmed-processing
+python -m uvicorn parking_chatbot.admin.api:app --reload
 ```
 
 2. Start the Stage 3 chatbot in another terminal:

@@ -30,6 +30,7 @@ def mocked_dependencies(
             Intent.GREETING,
             "Hello! How can I help you with your parking today?",
         ),
+        (Intent.ACKNOWLEDGEMENT, "You're welcome."),
         (
             Intent.RESERVATION,
             "What is your first name?",

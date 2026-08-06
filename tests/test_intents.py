@@ -7,6 +7,8 @@ from parking_chatbot.chatbot import Intent, detect_intent
     ("message", "expected"),
     [
         ("hello", Intent.GREETING),
+        ("hi", Intent.GREETING),
+        ("hey there", Intent.GREETING),
         ("Good afternoon", Intent.GREETING),
         ("I want to reserve a parking space", Intent.RESERVATION),
         ("Can I book a covered spot?", Intent.RESERVATION),
@@ -15,7 +17,10 @@ from parking_chatbot.chatbot import Intent, detect_intent
         ("What is the status of my reservation?", Intent.APPROVAL_STATUS),
         ("Check my reservation status", Intent.APPROVAL_STATUS),
         ("Has my reservation been approved?", Intent.APPROVAL_STATUS),
+        ("Is my reservation approved?", Intent.APPROVAL_STATUS),
         ("Was my reservation rejected?", Intent.APPROVAL_STATUS),
+        ("Was my booking rejected?", Intent.APPROVAL_STATUS),
+        ("Was my reservation recorded?", Intent.APPROVAL_STATUS),
         ("Is my booking still pending?", Intent.APPROVAL_STATUS),
         ("What are the parking hours?", Intent.INFORMATION),
         ("How much does covered parking cost?", Intent.INFORMATION),
@@ -80,7 +85,7 @@ def test_greeting_substrings_do_not_match(
     ("message", "expected"),
     [
         ("Hello, I want to book parking", Intent.RESERVATION),
-        ("Hi, what are your opening hours?", Intent.GREETING),
+        ("Hi, what are your opening hours?", Intent.INFORMATION),
         ("Can I reserve a covered parking space?", Intent.RESERVATION),
     ],
 )
@@ -108,3 +113,39 @@ def test_unrelated_messages_are_unknown(message: str) -> None:
 )
 def test_unrelated_status_phrases_do_not_match_approval_status(message: str) -> None:
     assert detect_intent(message) is Intent.UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "hello, what parking types do you have?",
+        "hi, how much does covered parking cost?",
+        "hey, where is the parking?",
+    ],
+)
+def test_greeting_with_parking_question_is_information(message: str) -> None:
+    assert detect_intent(message) is Intent.INFORMATION
+
+
+def test_greeting_with_status_question_keeps_status_priority() -> None:
+    assert detect_intent("hello, is my reservation approved?") is Intent.APPROVAL_STATUS
+
+
+@pytest.mark.parametrize(
+    "message",
+    ["thanks", "thank you", "thanks a lot", "got it", "okay, thanks"],
+)
+def test_acknowledgement_only_messages(message: str) -> None:
+    assert detect_intent(message) is Intent.ACKNOWLEDGEMENT
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Thanks, what are the working hours?",
+        "Great, how can I pay?",
+        "Okay, where is the parking?",
+    ],
+)
+def test_acknowledgement_does_not_hide_parking_question(message: str) -> None:
+    assert detect_intent(message) is Intent.INFORMATION

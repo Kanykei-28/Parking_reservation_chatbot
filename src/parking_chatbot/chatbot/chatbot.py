@@ -105,6 +105,8 @@ class ParkingChatbot:
             return prompt
         if intent is Intent.GREETING:
             return "Hello! How can I help you with your parking today?"
+        if intent is Intent.ACKNOWLEDGEMENT:
+            return "You're welcome."
         if intent is Intent.UNKNOWN:
             return (
                 "I'm only able to answer questions related to the parking "

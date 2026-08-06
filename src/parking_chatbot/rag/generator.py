@@ -6,7 +6,6 @@ from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import AzureChatOpenAI
 
-# OPENAI_CONFIG_PATH = Path("configs/openai.json")
 OPENAI_CONFIG_PATH = Path(__file__).resolve().parents[3] / "configs" / "openai.json"
 
 SYSTEM_PROMPT = """You are a parking reservation assistant.

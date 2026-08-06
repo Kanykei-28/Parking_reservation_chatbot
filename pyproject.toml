@@ -24,6 +24,7 @@ dependencies = [
     "langchain-huggingface>=1,<2",
     "langchain-milvus==0.3.3",
     "langchain-openai>=1,<2",
+    "langgraph>=1.2,<2",
 
     "sentence-transformers>=3,<6",
     "pymilvus==2.6.9",
