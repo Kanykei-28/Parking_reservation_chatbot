@@ -1,7 +1,9 @@
 from typing import Literal
+
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+
 from parking_chatbot.orchestration.nodes import (
     AdministratorNode,
     ConfirmedReservationRecorder,
@@ -9,7 +11,6 @@ from parking_chatbot.orchestration.nodes import (
     UserInteractionNode,
 )
 from parking_chatbot.orchestration.state import OrchestrationState
-
 
 OrchestrationGraph = CompiledStateGraph[
     OrchestrationState,
